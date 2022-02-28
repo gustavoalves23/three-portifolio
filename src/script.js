@@ -37,8 +37,6 @@ const envMap = cubeTextureLoader.load(
 )
 
 
-console.log(envMap);
-
 const textureLoader = new THREE.TextureLoader()
 
 const personTexture = textureLoader.load('/Textures/person.jpeg', () => {
@@ -348,6 +346,9 @@ scene.background = envMap
 const mouse = {
     x:0,
     y:0,
+    repetition: 0,
+    previousX: 0,
+    previousY: 0
 }
 
 canvas.addEventListener('mousemove', (e) => {
@@ -378,7 +379,8 @@ const actualScene = () => {
             gsap.to(test.position, {
                 x: 0.11,
                 y:0.11,
-                z:0
+                z:0,
+                duration: 10
             });
             gsap.to(camera.position, {
                 duration: 7,
@@ -414,7 +416,7 @@ const openScreen = () => {
     if (tela) {
         if (tela.rotation.x > Math.PI * 0.8) {
             const distance = tela.rotation.x - Math.PI * 0.8;
-            tela.rotation.x -= distance * 0.012;
+            tela.rotation.x -= distance * 0.005;
         }
 }
 }
@@ -436,11 +438,43 @@ const actualAnimation = (elapsedTime) => {
     }
 }
 
+// SCENE 2
+
+const scene2 = new THREE.Scene();
+
+const aspectRatio = sizes.width / sizes.height
+const camera2 = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 1, -1)
+
+camera2.position.z = 2;
+
+
+const background = new THREE.Mesh(
+    new THREE.PlaneGeometry(aspectRatio * 2, 2),
+    new THREE.ShaderMaterial({
+        vertexShader: vertexPaper,
+        fragmentShader: fragmentPaper,
+        uniforms:{
+            time: {value: 0}
+        }
+    })
+)
+// background.rotation.x =  2;
+
+// camera2.lookAt(background)
+scene2.add(background);
+scene2.add(camera2);
+
+
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
     const deltaTime = elapsedTime - previousTime
     previousTime = elapsedTime
+
+    if (laptop) {
+        laptop.rotation.x = 4.8 + ( Math.sin((elapsedTime * 2) / 5)) / 12;
+        // laptop.rotation.z = (- Math.PI / 2) + Math.sin((elapsedTime) * 3);
+    }
 
     // Update controls
     controls.update()
@@ -448,7 +482,7 @@ const tick = () =>
     gravity(elapsedTime);
 
     targetView.material.uniforms.time.value = elapsedTime / 2;
-    // paperSheet.material.uniforms.time.value = elapsedTime / 2;
+    background.material.uniforms.time.value = elapsedTime / 2;
 
     mainGroup.rotation.y = Math.PI * 0.5;
 
@@ -465,20 +499,26 @@ const tick = () =>
         const ParallaxX = mouse.x * 0.5;
         const ParallaxY = mouse.y * 0.5;
 
-// controls.target = targetView.position;
-
 
     
     if (actualPhase === 0) {
-        mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.5 * deltaTime;
-        mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
+        if (mouse.y === mouse.previousY && mouse.x === mouse.previousX) {
+            mouse.repetition += deltaTime;
+        } else {
+            mouse.repetition = 0;
+        }
+        if (mouse.repetition < 3) {
+            mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.5 * deltaTime;
+            mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
+        }
+        mouse.previousX = mouse.x;
+        mouse.previousY = mouse.y;
     }
-    
-    // Call tick again on the next frame
-    camera.updateProjectionMatrix()
-
     renderer.render(scene, camera)
 
+    
+    // Call tick again on the next frame
+    // camera.updateProjectionMatrix()
 
     window.requestAnimationFrame(tick)
 }

@@ -80,4 +80,5 @@ float cnoise(vec3 P){
 
 void main() {
   gl_FragColor = vec4(cnoise(vec3(vec2(vUv * 40.), time)));
+  gl_FragColor = vec4(0.3, 0.6, 0.9, 1.);
 }
