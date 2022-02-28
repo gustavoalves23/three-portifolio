@@ -8,6 +8,11 @@ import vertexPicture from './Shaders/vertexPicture.glsl';
 import fragmentPaper from './Shaders/fragmentPaper.glsl';
 import vertexPaper from './Shaders/vertexPaper.glsl';
 import gsap from 'gsap';
+import App from './App.jsx'
+import React from 'react'
+import ReactDOM from 'react-dom';
+
+ReactDOM.render(<App />, document.getElementById('root'));
 
 /**
  * Base

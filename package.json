@@ -8,6 +8,7 @@
   "dependencies": {
     "@babel/core": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
+    "@babel/preset-react": "^7.16.7",
     "babel-loader": "^8.2.3",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^9.0.1",
@@ -20,6 +21,8 @@
     "mini-css-extract-plugin": "^2.4.3",
     "portfinder-sync": "0.0.2",
     "raw-loader": "^4.0.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "style-loader": "^3.3.1",
     "three": "^0.134.0",
     "webpack": "^5.60.0",
