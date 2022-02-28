@@ -119,14 +119,21 @@ gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
 let laptop;
 let tela;
 
+const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.1, 0.1,),
+    new THREE.MeshBasicMaterial({color: 'red'})
+)
+
 gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
     laptop = gltf.scene.children[0] ;
     console.log(laptop);
     laptop.traverse((item) => {
         if (item.name === 'Screen') {
             tela = item;
+            // tela.children.concat(screen)
+            console.log(tela.children);
         gui.add(tela.rotation, 'x', -10, 10)
-            tela.rotation.x = Math.PI * 3/2;
+            tela.rotation.x = Math.PI * 3/2.05;
         }
 
     })
@@ -134,6 +141,7 @@ gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
     // laptop.scale.set(0.01, 0.01, 0.001)
     laptop.position.y = 0.12;
     laptop.rotation.z = - Math.PI / 2;
+    laptop.rotation.y = 0.3;
     frameGroup.add(laptop)
 } )
 
@@ -159,7 +167,7 @@ paperSheet.rotation.order = 'YXZ'
 
 paperSheet.rotation.x = -Math.PI / 2;
 paperSheet.rotation.z = 0.9;
-paperSheet.position.y = 0.11;
+paperSheet.position.y = 0.103;
 paperSheet.position.z = 0.2;
 paperSheet.position.x = -0.03;
 mainGroup.add(paperSheet)
@@ -246,7 +254,7 @@ gui.add(mainGroup.rotation, 'y', 0, 10);
 
 const starsGeometry = new THREE.BufferGeometry();
 
-const starsQuantity = 10000;
+const starsQuantity = 7000;
 const randomOffset = 0.2;
 
 const starsPositionArray = new Float32Array(starsQuantity * 3 * 3);
@@ -366,22 +374,41 @@ window.addEventListener('wheel', (e) => {
 const actualScene = () => {
     switch (actualPhase) {
         case 1:
-            let screenActualPosition;
-            test.position.x += 0.5;
-
-            tela.getWorldPosition(screenActualPosition)
-            tela.getWorldPosition(controls.target);
+            camera.position.order = 'YXZ'
+            gsap.to(test.position, {
+                x: 0.11,
+                y:0.11,
+                z:0
+            });
             gsap.to(camera.position, {
-                duration: 3,
-                x: screenActualPosition.x,
-                y: screenActualPosition.y,
-                z: screenActualPosition.z,
+                duration: 7,
+                y: 0.6,
+                z: - 0.5,
+                x: -1,
+                ease: 'SlowMo.easeIn'
+            }).then(() => {
+                gsap.to(camera.position, {
+                    duration: 3,
+                    y: 0.25,
+                    z: 0,
+                    x: 0,
+                    ease: 'Power4.easeIn'
+                }).then(() => {
+                    gsap.to(camera, {
+                        fov: 10,
+                        duration:0.5
+                    })
+                })
             })
             break
         default: 
         break
     }
 }
+
+gui.add(camera.position, 'x', -2, 2).step(0.001);
+gui.add(camera.position, 'y', -2, 2).step(0.001);
+gui.add(camera.position, 'z', -2, 2).step(0.001);
 
 const openScreen = () => {
     if (tela) {
@@ -401,6 +428,7 @@ const actualAnimation = (elapsedTime) => {
         break
 
         case 1:
+        test.getWorldPosition(controls.target)
             openScreen()
             break
         default:
@@ -447,6 +475,7 @@ const tick = () =>
     }
     
     // Call tick again on the next frame
+    camera.updateProjectionMatrix()
 
     renderer.render(scene, camera)
 
