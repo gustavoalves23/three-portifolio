@@ -7,6 +7,7 @@ import fragmentPicture from './Shaders/fragmentPicture.glsl';
 import vertexPicture from './Shaders/vertexPicture.glsl';
 import fragmentPaper from './Shaders/fragmentPaper.glsl';
 import vertexPaper from './Shaders/vertexPaper.glsl';
+import gsap from 'gsap';
 
 /**
  * Base
@@ -35,13 +36,13 @@ console.log(envMap);
 
 const textureLoader = new THREE.TextureLoader()
 
-const personTexture = textureLoader.load('/Textures/person.jpeg');
-const paperTexture = textureLoader.load('/Textures/paperTexture.png', () => {
+const personTexture = textureLoader.load('/Textures/person.jpeg', () => {
     let stockPos = new THREE.Vector3()
-    targetView.getWorldPosition(stockPos);
-    stockPos.x -= 0.04;
-    controls.target = stockPos;
+    stockPos.copy(targetView.position)
+    stockPos.z -= 0.07;
+    test.position.copy(stockPos)
 });
+const paperTexture = textureLoader.load('/Textures/paperTexture.png');
 paperTexture.repeat.y = 4;
 paperTexture.wrapT = THREE.MirroredRepeatWrapping;
 
@@ -66,9 +67,8 @@ const tableMaterial = new THREE.MeshStandardMaterial({
 
 const test = new THREE.Mesh(
     new THREE.BoxGeometry(.01, .01, .01),
-    new THREE.MeshBasicMaterial()
+    new THREE.MeshBasicMaterial({transparent: true})
 )
-
 
 
 gltfLoader.load('/models/Desk.glb', (gltf) => {
@@ -89,6 +89,8 @@ gltfLoader.load('/models/Desk.glb', (gltf) => {
 
 let frame;
 
+const frameGroup = new THREE.Group()
+
 gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
     gltf.scene.scale.set(0.008, 0.008, 0.008)
     frame = gltf.scene;
@@ -101,6 +103,7 @@ gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
     })
     frame.position.set(-0.032, 0.103, 0.189);
     frame.rotation.y = 3.279;
+    frameGroup.add(frame);
     // gui.add(frame.position, 'x', -1, 1).step(0.001);
     // gui.add(frame.position, 'y', 0, 1).step(0.001);
     // gui.add(frame.position, 'z', 0, 1).step(0.001);
@@ -108,10 +111,32 @@ gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
 
 })
 
+let laptop;
+let tela;
+
+gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
+    laptop = gltf.scene.children[0] ;
+    console.log(laptop);
+    laptop.traverse((item) => {
+        if (item.name === 'Screen') {
+            tela = item;
+        gui.add(tela.rotation, 'x', -10, 10)
+            tela.rotation.x = Math.PI * 3/2;
+        }
+
+    })
+    laptop.scale.set(0.005, 0.005, 0.005)
+    // laptop.scale.set(0.01, 0.01, 0.001)
+    laptop.position.y = 0.12;
+    laptop.rotation.z = - Math.PI / 2;
+    frameGroup.add(laptop)
+} )
+
+
 
 const paperSheet = new THREE.Mesh(
     new THREE.PlaneGeometry(0.08, 0.13),
-    new THREE.MeshStandardMaterial({ map: paperTexture, }),
+    new THREE.MeshStandardMaterial({ map: paperTexture, side: THREE.DoubleSide }),
     // new THREE.ShaderMaterial({
     //     vertexShader: vertexPaper,
     //     fragmentShader:  fragmentPaper,
@@ -129,7 +154,7 @@ paperSheet.rotation.order = 'YXZ'
 
 paperSheet.rotation.x = -Math.PI / 2;
 paperSheet.rotation.z = 0.9;
-paperSheet.position.y = 0.103;
+paperSheet.position.y = 0.11;
 paperSheet.position.z = 0.2;
 paperSheet.position.x = -0.03;
 mainGroup.add(paperSheet)
@@ -194,8 +219,10 @@ targetView.rotation.order = 'YXZ'
 targetView.rotation.set(-0.323, 4.842, 0);
 targetView.position.set(-0.03263828, 0.12267774, 0.18827237);
 
-mainGroup.add(targetView)
+frameGroup.add(targetView)
+frameGroup.add(test)
 
+mainGroup.add(frameGroup)
 
 
 // gui.add(targetView.rotation, 'x', -2, 5).step(0.001);
@@ -239,7 +266,7 @@ const stars = new THREE.Points(
         size: 0.0005
     })
 )
-mainGroup.add(stars)
+scene.add(stars)
 
 /**
  * Sizes
@@ -282,7 +309,7 @@ gui.add(camera.position, 'z', -.3, 0.3);
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-
+// controls.enableZoom = false;
 
 /**
  * Renderer
@@ -310,10 +337,71 @@ const mouse = {
     y:0,
 }
 
-window.addEventListener('mousemove', (e) => {
+canvas.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / sizes.width)  - 0.5,
     mouse.y = - (e.clientY / sizes.height) + 0.5
 })
+
+let actualPhase = 0;
+
+let canOpenScreen = false;
+
+
+const gravity = (elapsedTime) => {
+    mainGroup.rotation.x = Math.sin(elapsedTime / 5) / 10;
+    mainGroup.rotation.y = 2 * Math.cos(elapsedTime  * 2 / 10) / 10;
+}
+
+window.addEventListener('wheel', (e) => {
+    actualPhase = 1;
+    console.log(e);
+    actualScene();
+})
+
+const actualScene = () => {
+    switch (actualPhase) {
+        case 1:
+            let screenActualPosition;
+            test.position.x += 0.5;
+
+            tela.getWorldPosition(screenActualPosition)
+            tela.getWorldPosition(controls.target);
+            gsap.to(camera.position, {
+                duration: 3,
+                x: screenActualPosition.x,
+                y: screenActualPosition.y,
+                z: screenActualPosition.z,
+            })
+            break
+        default: 
+        break
+    }
+}
+
+const openScreen = () => {
+    if (tela) {
+        if (tela.rotation.x > Math.PI * 0.8) {
+            const distance = tela.rotation.x - Math.PI * 0.8;
+            tela.rotation.x -= distance * 0.012;
+        }
+}
+}
+
+
+const actualAnimation = (elapsedTime) => {
+    switch (actualPhase){
+        case 0:
+
+        test.getWorldPosition(controls.target)
+        break
+
+        case 1:
+            openScreen()
+            break
+        default:
+            break
+    }
+}
 
 const tick = () =>
 {
@@ -324,19 +412,20 @@ const tick = () =>
     // Update controls
     controls.update()
 
+    gravity(elapsedTime);
+
     targetView.material.uniforms.time.value = elapsedTime / 2;
     // paperSheet.material.uniforms.time.value = elapsedTime / 2;
 
     mainGroup.rotation.y = Math.PI * 0.5;
 
 
-
+    actualAnimation(elapsedTime);
 
     // Render
-    renderer.render(scene, camera)
 
-    // mainGroup.rotation.x = Math.sin(elapsedTime / 5) / 10;
-    // mainGroup.rotation.y = 6 * Math.cos(elapsedTime  * 2 / 10) / 10;
+        frameGroup.position.y = (Math.sin(elapsedTime / 5) + 2) / 200;
+        frameGroup.rotation.z = (Math.sin(elapsedTime / 200) ) / 20;
 
         //Parallax
 
@@ -347,10 +436,14 @@ const tick = () =>
 
 
     
-        // mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.05 * deltaTime;
-        // mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.05 * deltaTime;
+    if (actualPhase === 0) {
+        mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.5 * deltaTime;
+        mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
+    }
     
     // Call tick again on the next frame
+
+    renderer.render(scene, camera)
 
 
     window.requestAnimationFrame(tick)
