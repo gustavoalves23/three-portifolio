@@ -7,12 +7,14 @@ import fragmentPicture from './Shaders/fragmentPicture.glsl';
 import vertexPicture from './Shaders/vertexPicture.glsl';
 import fragmentPaper from './Shaders/fragmentPaper.glsl';
 import vertexPaper from './Shaders/vertexPaper.glsl';
+import fragmentText from './Shaders/fragmentText.glsl';
+import vertexText from './Shaders/vertexText.glsl';
 import gsap from 'gsap';
 import App from './App.jsx'
 import React from 'react'
-import ReactDOM, { render } from 'react-dom';
-
-ReactDOM.render(<App />, document.getElementById('root'));
+import ReactDOM from 'react-dom';
+import {  FontLoader } from 'three/examples/jsm/loaders/FontLoader'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
 /**
  * Base
@@ -195,25 +197,6 @@ gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
 })
 
 
-
-const paperSheet = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.08, 0.13),
-    new THREE.MeshStandardMaterial({ map: paperTexture, side: THREE.DoubleSide }),
-)
-
-
-paperSheet.receiveShadow = true
-
-paperSheet.rotation.order = 'YXZ'
-
-paperSheet.rotation.x = -Math.PI / 2;
-paperSheet.rotation.z = 0.9;
-paperSheet.position.y = 0.103;
-paperSheet.position.z = 0.2;
-paperSheet.position.x = -0.03;
-mainGroup.add(paperSheet)
-
-
 /**
  * Lights
  */
@@ -345,7 +328,8 @@ controls.enableDamping = true
  */
 const renderer = new THREE.WebGL1Renderer({
     canvas: canvas,
-    antialias: true
+    antialias: true,
+    alpha: true
 })
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -395,7 +379,6 @@ window.addEventListener('wheel', (e) => {
         actualScene();
     }
 })
-
 
 
 gui.add(camera.position, 'x', -2, 2).step(0.001);
@@ -455,9 +438,10 @@ const background = new THREE.Mesh(
         uniforms:{
             u_time: {value: 0},
             u_resolution: {value: new THREE.Vector2(sizes.width, sizes.height)},
-            intensity: {value: 1},
-            backgroundColor: {value: actualBg },
-            mainColor: {value: actualColor}
+            intensity: {value: 0.8},
+            backgroundColor: {value: new THREE.Color(1,1,1) },
+            mainColor: {value: new THREE.Color(0, 0, 0)},
+            quantity: {value: 700}
         }
     })
 )
@@ -478,6 +462,8 @@ const changeColor = () => {
 }
 
 scene2.add(background);
+
+let rendering = true;
 
 
 
@@ -524,7 +510,21 @@ const actualScene = () => {
             const showBalls = () => {
                 timeline.to(background.material.uniforms.intensity, {
                     value: 0,
-                    duration: 10,
+                    duration: 5,
+                })
+                timeline.to(background.material.uniforms.quantity, {
+                    value: 2,
+                    duration: 6,
+                    ease: 'Power0 easeOut'
+                })
+                timeline.to(background.material.uniforms.quantity, {
+                    delay: 10,
+                    value: 0,
+                    duration: 6,
+                    ease: 'Power2 easeOut'
+                }).then(() => {
+                    rendering = false;
+                    canvas.remove();
                 })
             }
             break
@@ -532,6 +532,53 @@ const actualScene = () => {
         break
     }
 }
+
+const fontLoader = new FontLoader();
+
+let fonte;
+
+fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
+    console.log(font);
+    const textGeometry = new TextGeometry('GUSTAVO MIYAZAKI',{
+        font,
+        size: 0.01,
+        height: 0.005
+    })
+    // const material = new THREE.ShaderMaterial({
+    //     vertexShader: vertexText,
+    //     fragmentShader: fragmentText,
+    //     uniforms:{
+    //         u_time: {value: 0},
+    //         u_resolution: {value: new THREE.Vector2(100, 100)},
+    //         intensity: {value: 0},
+    //         backgroundColor: {value: actualBg },
+    //         mainColor: {value: new THREE.Color('red')}
+    //     }
+    // })
+
+    const material = new THREE.MeshNormalMaterial()
+    const mesh = new THREE.Mesh(textGeometry, material);
+    fonte = mesh;
+
+    mainGroup.add(mesh)
+})
+
+const paperSheet = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.08, 0.13),
+    new THREE.MeshStandardMaterial({ map: paperTexture, side: THREE.DoubleSide }),
+)
+
+
+paperSheet.receiveShadow = true
+
+paperSheet.rotation.order = 'YXZ'
+
+paperSheet.rotation.x = -Math.PI / 2;
+paperSheet.rotation.z = 0.9;
+paperSheet.position.y = 0.103;
+paperSheet.position.z = 0.2;
+paperSheet.position.x = -0.03;
+mainGroup.add(paperSheet)
 
 
 const tick = () =>
@@ -553,6 +600,9 @@ const tick = () =>
 
     targetView.material.uniforms.time.value = elapsedTime / 2;
     background.material.uniforms.u_time.value = elapsedTime / 2;
+    // if (fonte) {
+    //     fonte.material.uniforms.u_time.value = elapsedTime / 2;
+    // }
 
     mainGroup.rotation.y = Math.PI * 0.5;
 
@@ -591,7 +641,11 @@ const tick = () =>
     // Call tick again on the next frame
     camera.updateProjectionMatrix()
 
-    window.requestAnimationFrame(tick)
+    if (rendering) {
+        window.requestAnimationFrame(tick)
+    }
 }
 
 tick()
+
+ReactDOM.render(<App />, document.getElementById('root'));

@@ -11,6 +11,8 @@ uniform float intensity;
 uniform vec3 backgroundColor;
 uniform vec3 mainColor;
 
+uniform float quantity;
+
 // Cellular noise ("Worley noise") in 2D in GLSL.
 // Copyright (c) Stefan Gustavson 2011-04-19. All rights reserved.
 // This code is released under the conditions of the MIT license.
@@ -74,10 +76,10 @@ void main(void) {
 
 	vec2 pos = st-.5;
 	float a = dot(pos,pos)-u_time*0.1;
-	float n = step(abs(sin(a*3.1415*5.)),F.x*2.);
+	float n = step(abs(sin(a*3.1415*5.)),F.x*quantity);
 
 	if (n == 0.) {
-    gl_FragColor = vec4(backgroundColor + intensity, 1.0);
+    gl_FragColor = vec4(backgroundColor + intensity, .0);
   } else {
     gl_FragColor = vec4(mainColor + intensity, 1.0);
   }
