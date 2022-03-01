@@ -21,3 +21,17 @@ body
     outline: none;
     z-index: 2;
 }
+
+.loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background-color: rgb(0, 0, 0);
+    color: white;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

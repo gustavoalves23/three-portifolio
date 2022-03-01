@@ -79,7 +79,8 @@ void main(void) {
 	float n = step(abs(sin(a*3.1415*5.)),F.x*quantity);
 
 	if (n == 0.) {
-    gl_FragColor = vec4(0.);
+    // gl_FragColor = vec4(0.);
+		gl_FragColor = vec4(backgroundColor, 1.0) * smoothstep(0., 2., quantity);
     // gl_FragColor = vec4(backgroundColor , 0.0);
   } else {
     gl_FragColor = vec4(mainColor + intensity, 1.0);

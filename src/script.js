@@ -23,13 +23,22 @@ ReactDOM.render(<App />, document.getElementById('root'));
  */
 // Debug
 const gui = new dat.GUI()
+gui.close()
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 //Textures
 
-const cubeTextureLoader = new THREE.CubeTextureLoader()
+const loadManager = new THREE.LoadingManager(() => {
+    gsap.to('.loading', {
+        opacity: 0,
+        duration: 6,
+        ease: 'Power4 easeIn'
+    })
+});
+
+const cubeTextureLoader = new THREE.CubeTextureLoader(loadManager)
 
 const envMap = cubeTextureLoader.load(
     ['/envmap/space/px.png',
@@ -41,7 +50,7 @@ const envMap = cubeTextureLoader.load(
 )
 
 
-const textureLoader = new THREE.TextureLoader()
+const textureLoader = new THREE.TextureLoader(loadManager)
 
 const personTexture = textureLoader.load('/Textures/person.jpeg', () => {
     let stockPos = new THREE.Vector3()
@@ -57,7 +66,7 @@ paperTexture.wrapT = THREE.MirroredRepeatWrapping;
 // Scene
 const scene = new THREE.Scene()
 
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(loadManager);
 
 const mainGroup = new THREE.Group()
 
@@ -131,7 +140,6 @@ let tela;
 
 gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
     laptop = gltf.scene.children[0] ;
-    console.log(laptop);
     laptop.traverse((item) => {
         if (item.name === 'Screen') {
             tela = item;
@@ -153,7 +161,6 @@ const bodyTexture = textureLoader.load('/models/Astro/textures/Mat_0_normal.png'
 gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
     gltf.scene.scale.set(0.002, 0.002, 0.002)
     gltf.scene.traverse((item) => {
-        console.log(item.name);
         item.material = new THREE.MeshStandardMaterial({
             metalness: 0.8,
             roughness: 0.5,
@@ -438,7 +445,6 @@ const changeColor = () => {
         actualBg = colorPallet[actualIndex + 2];
     }
     background.material.uniforms.backgroundColor.value = actualBg;
-    console.log(actualBg, actualColor);
     background.material.uniforms.mainColor.value = actualColor;
 }
 
@@ -514,7 +520,7 @@ const actualScene = () => {
     }
 }
 
-const fontLoader = new FontLoader();
+const fontLoader = new FontLoader(loadManager);
 
 let fonte;
 
@@ -522,7 +528,6 @@ const textMaterial = new THREE.MeshNormalMaterial({
 })
 
 fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
-    console.log(font);
     const textGeometry = new TextGeometry('GUSTAVO MIYAZAKI',{
         font,
         size: 0.045,
@@ -615,8 +620,6 @@ const tick = () =>
         mouse.previousX = mouse.x;
         mouse.previousY = mouse.y;
     }
-
-    console.log(elapsedTime % 10 > 0 && elapsedTime % 10 < 0.01);
 
     renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
 
