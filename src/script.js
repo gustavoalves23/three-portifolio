@@ -18,6 +18,10 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
+let actualPhase = 0;
+let readyToStart = false;
+
+
 /**
  * Base
  */
@@ -30,12 +34,18 @@ const canvas = document.querySelector('canvas.webgl')
 
 //Textures
 
+const nextStep = 0;
+
 const loadManager = new THREE.LoadingManager(() => {
     gsap.to('.loading', {
         opacity: 0,
         duration: 4,
         ease: 'Power4 easeIn'
-}).then(() => document.querySelector('.loading').remove())
+}).then(() => {
+    document.querySelector('.loading').remove();
+    readyToStart = true;
+})
+
 });
 
 const cubeTextureLoader = new THREE.CubeTextureLoader(loadManager)
@@ -158,6 +168,8 @@ gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
 const glassTexture = textureLoader.load('/models/Astro/textures/Glass_normal.png');
 const bodyTexture = textureLoader.load('/models/Astro/textures/Mat_0_normal.png');
 
+let astro;
+
 gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
     gltf.scene.scale.set(0.002, 0.002, 0.002)
     gltf.scene.traverse((item) => {
@@ -186,7 +198,7 @@ gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
         }
         
     })
-
+    astro = gltf.scene;
 
     mainGroup.add(gltf.scene)
     gltf.scene.rotation.order = 'YXZ'
@@ -315,7 +327,7 @@ mainGroup.add(camera)
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-// controls.enableZoom = false;
+controls.enableZoom = false;
 
 /**
  * Renderer
@@ -349,28 +361,32 @@ const mouse = {
     previousY: 0
 }
 
-canvas.addEventListener('mousemove', (e) => {
+window.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / sizes.width)  - 0.5,
     mouse.y = - (e.clientY / sizes.height) + 0.5
 })
 
-let actualPhase = 0;
-
 let canOpenScreen = false;
+
 
 
 const gravity = (elapsedTime) => {
     mainGroup.rotation.x = Math.sin(elapsedTime / 5) / 10;
     mainGroup.rotation.y = 2 * Math.cos(elapsedTime  * 2 / 10) / 10;
+
+    if (astro) {
+        astro.rotation.y += Math.sin(elapsedTime / 10) / 2000;
+    }
 }
 
-let readyToStart = true;
 
 window.addEventListener('wheel', (e) => {
-    if (actualPhase == 0 && readyToStart) {
+    if (actualPhase == 0 && readyToStart && e.deltaY > 0) {
         actualPhase = 1;
         readyToStart = false;
         actualScene();
+    } else if (canEnterScreen) {
+        enterScreen();
     }
 })
 
@@ -409,7 +425,7 @@ const camera2 = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 
 
 camera2.position.z = 3;
 
-const colorPallet = [new THREE.Color(0, 0, 0), new THREE.Color(Math.random(), Math.random(), Math.random())];
+const colorPallet = [new THREE.Color(Math.max(Math.random() - 0.5, 0.1), Math.max(Math.random() - 0.5, 0.1), Math.max(Math.random() - 0.5, 0.1)), new THREE.Color(Math.min(Math.random() + 0.5, 0.9), Math.min(Math.random() + 0.5, 0.9), Math.min(Math.random() + 0.5, 0.9))];
 
 for (let i = 2; i < 50; i+= 1) {
     colorPallet[i] = new THREE.Color(Math.random(), Math.random(), Math.random());
@@ -426,7 +442,7 @@ const background = new THREE.Mesh(
         uniforms:{
             u_time: {value: 0},
             u_resolution: {value: new THREE.Vector2(sizes.width, sizes.height)},
-            intensity: {value: 0.8},
+            intensity: {value: 1},
             backgroundColor: {value: actualBg },
             mainColor: {value: actualColor},
             quantity: {value: 700}
@@ -461,67 +477,62 @@ canvas.addEventListener('click', () => {
     }
 })
 
+let canEnterScreen = false;
+
+const enterScreen =  () => {
+    const timeline2 = gsap.timeline();
+timeline2.to(camera.position, {
+    duration: 3,
+    y: 0.25,
+    z: 0,
+    x: 0,
+    ease: 'Power4.easeIn'
+})
+timeline2.to(camera, {
+    fov: 10,
+    duration:0.5
+}).then(() => {
+    actualPhase = 2;
+    const timelime3 = gsap.timeline()
+    timelime3.to(background.material.uniforms.intensity, {
+        delay: 2,
+        value: 0,
+        duration: 5,
+    })
+    timelime3.to(background.material.uniforms.quantity, {
+        value: 2,
+        duration: 6,
+        ease: 'Power0 easeOut'
+    })
+    timelime3.to(background.material.uniforms.quantity, {
+        delay: 10,
+        value: 0,
+        duration: 6,
+        ease: 'Power2 easeOut'
+    }).then(() => {
+        rendering = false;
+        canvas.remove();
+    })
+})
+}
+
 const actualScene = () => {
     switch (actualPhase) {
         case 1:
             camera.position.order = 'YXZ'
-            const timeline = gsap.timeline();
             gsap.to(test.position, {
                 x: 0.11,
                 y:0.11,
                 z:0,
                 duration: 10
             });
-            timeline.to(camera.position, {
+            gsap.to(camera.position, {
                 duration: 10,
                 y: 0.6,
                 z: - 0.5,
                 x: -1,
                 ease: 'slowMo.easeIn'
-            });
-            timeline.to(camera.position, {
-                duration: 3,
-                y: 0.25,
-                z: 0,
-                x: 0,
-                ease: 'Power4.easeIn'
-            })
-            timeline.to(camera, {
-                fov: 10,
-                duration:0.5
-            })
-            setTimeout(() => {
-                actualPhase = 2;
-                showBalls()
-            }, 14000);
-            const showBalls = () => {
-                timeline.to(background.material.uniforms.intensity, {
-                    value: 0,
-                    duration: 5,
-                })
-                timeline.to(background.material.uniforms.quantity, {
-                    value: 2,
-                    duration: 6,
-                    ease: 'Power0 easeOut'
-                })
-                if (fonte) {
-                    gsap.to(fonte.material.uniforms.opacity, {
-                        value: 0,
-                        duration: 1,
-                    })
-                    
-                }
-                timeline.to(background.material.uniforms.quantity, {
-                    delay: 6,
-                    value: 0,
-                    duration: 6,
-                    ease: 'Power2 easeOut'
-                }).then(() => {
-                    rendering = false;
-                    canvas.remove();
-                })
-            }
-            break
+            }).then(() => canEnterScreen = true);
         default: 
         break
     }
@@ -601,9 +612,7 @@ const tick = () =>
 
     targetView.material.uniforms.time.value = elapsedTime / 2;
     background.material.uniforms.u_time.value = elapsedTime / 2;
-    // if (fonte) {
-    //     fonte.material.uniforms.u_time.value = elapsedTime / 2;
-    // }
+
 
     mainGroup.rotation.y = Math.PI * 0.5;
 
@@ -615,6 +624,7 @@ const tick = () =>
         frameGroup.position.y = (Math.sin(elapsedTime / 5) + 2) / 200;
         frameGroup.rotation.z = (Math.sin(elapsedTime / 200) ) / 20;
 
+
         //Parallax
 
         const ParallaxX = mouse.x * 0.5;
@@ -622,7 +632,7 @@ const tick = () =>
 
 
     
-    if (actualPhase === 0) {
+    if (actualPhase === 0 || canEnterScreen) {
         if (mouse.y === mouse.previousY && mouse.x === mouse.previousX) {
             mouse.repetition += deltaTime;
         } else {

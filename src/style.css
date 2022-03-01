@@ -8,9 +8,15 @@ html,
 body
 {
     overflow: hidden;
-    background-color: red;
+    background-color: black;
     width: 100vw;
     height: 100vh;
+}
+
+.app {
+    background-color: red;
+    width: 100vw;
+    height: 100vw;
 }
 
 .webgl
