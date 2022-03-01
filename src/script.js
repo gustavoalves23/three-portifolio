@@ -499,7 +499,7 @@ const actualScene = () => {
                     ease: 'Power0 easeOut'
                 })
                 timeline.to(background.material.uniforms.quantity, {
-                    delay: 10,
+                    delay: 6,
                     value: 0,
                     duration: 6,
                     ease: 'Power2 easeOut'
@@ -518,28 +518,28 @@ const fontLoader = new FontLoader();
 
 let fonte;
 
+const textMaterial = new THREE.MeshNormalMaterial({
+})
+
 fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
     console.log(font);
     const textGeometry = new TextGeometry('GUSTAVO MIYAZAKI',{
         font,
-        size: 0.01,
-        height: 0.005
+        size: 0.045,
+        height: 0.01
     })
-    // const material = new THREE.ShaderMaterial({
-    //     vertexShader: vertexText,
-    //     fragmentShader: fragmentText,
-    //     uniforms:{
-    //         u_time: {value: 0},
-    //         u_resolution: {value: new THREE.Vector2(100, 100)},
-    //         intensity: {value: 0},
-    //         backgroundColor: {value: actualBg },
-    //         mainColor: {value: new THREE.Color('red')}
-    //     }
-    // })
 
-    const material = new THREE.MeshNormalMaterial()
-    const mesh = new THREE.Mesh(textGeometry, material);
+    const mesh = new THREE.Mesh(textGeometry, textMaterial);
     fonte = mesh;
+
+    fonte.position.set(-0.131, 0.213, -0.155);
+    fonte.rotation.set(0.23, -0.409, 0.181);
+    gui.add(fonte.position, 'x', -1, 1).step(0.001);
+    gui.add(fonte.position, 'y', -1, 1).step(0.001);
+    gui.add(fonte.position, 'z', -1, 1).step(0.001);
+    gui.add(fonte.rotation, 'x', -2, 2).step(0.001);
+    gui.add(fonte.rotation, 'y', -2, 2).step(0.001);
+    gui.add(fonte.rotation, 'z', -2, 2).step(0.001);
 
     mainGroup.add(mesh)
 })
@@ -615,6 +615,8 @@ const tick = () =>
         mouse.previousX = mouse.x;
         mouse.previousY = mouse.y;
     }
+
+    console.log(elapsedTime % 10 > 0 && elapsedTime % 10 < 0.01);
 
     renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
 
