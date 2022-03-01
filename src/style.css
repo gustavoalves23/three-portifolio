@@ -35,3 +35,7 @@ body
     justify-content: center;
     align-items: center;
 }
+
+.loading  h1 {
+    font-size: 100px;
+}

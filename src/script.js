@@ -33,9 +33,9 @@ const canvas = document.querySelector('canvas.webgl')
 const loadManager = new THREE.LoadingManager(() => {
     gsap.to('.loading', {
         opacity: 0,
-        duration: 6,
+        duration: 4,
         ease: 'Power4 easeIn'
-    })
+}).then(() => document.querySelector('.loading').remove())
 });
 
 const cubeTextureLoader = new THREE.CubeTextureLoader(loadManager)
@@ -409,7 +409,7 @@ const camera2 = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 
 
 camera2.position.z = 3;
 
-const colorPallet = [new THREE.Color(0, 0, 0), new THREE.Color(1,1,1)];
+const colorPallet = [new THREE.Color(0, 0, 0), new THREE.Color(Math.random(), Math.random(), Math.random())];
 
 for (let i = 2; i < 50; i+= 1) {
     colorPallet[i] = new THREE.Color(Math.random(), Math.random(), Math.random());
@@ -427,8 +427,8 @@ const background = new THREE.Mesh(
             u_time: {value: 0},
             u_resolution: {value: new THREE.Vector2(sizes.width, sizes.height)},
             intensity: {value: 0.8},
-            backgroundColor: {value: new THREE.Color(1,1,1) },
-            mainColor: {value: new THREE.Color(0, 0, 0)},
+            backgroundColor: {value: actualBg },
+            mainColor: {value: actualColor},
             quantity: {value: 700}
         }
     })
@@ -504,6 +504,13 @@ const actualScene = () => {
                     duration: 6,
                     ease: 'Power0 easeOut'
                 })
+                if (fonte) {
+                    gsap.to(fonte.material.uniforms.opacity, {
+                        value: 0,
+                        duration: 1,
+                    })
+                    
+                }
                 timeline.to(background.material.uniforms.quantity, {
                     delay: 6,
                     value: 0,
@@ -524,7 +531,15 @@ const fontLoader = new FontLoader(loadManager);
 
 let fonte;
 
-const textMaterial = new THREE.MeshNormalMaterial({
+// const textMaterial = new THREE.MeshNormalMaterial({
+// })
+
+const textMaterial = new THREE.ShaderMaterial({
+    vertexShader: vertexText,
+    fragmentShader: fragmentText,
+    uniforms: {
+        opacity: {value: 1},
+    }
 })
 
 fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
