@@ -10,7 +10,7 @@ import vertexPaper from './Shaders/vertexPaper.glsl';
 import gsap from 'gsap';
 import App from './App.jsx'
 import React from 'react'
-import ReactDOM from 'react-dom';
+import ReactDOM, { render } from 'react-dom';
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
@@ -70,7 +70,19 @@ const tableMaterial = new THREE.MeshStandardMaterial({
 
 const test = new THREE.Mesh(
     new THREE.BoxGeometry(.01, .01, .01),
-    new THREE.MeshBasicMaterial({transparent: true})
+    new THREE.ShaderMaterial({
+        transparent: true,
+        vertexShader: `
+        void main () {
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+        }
+        `,
+        fragmentShader: `
+            void main () {
+                gl_FragColor = vec4(0.,0.,0.,0.);
+            }
+        `
+    })
 )
 
 
@@ -107,20 +119,11 @@ gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
     frame.position.set(-0.032, 0.103, 0.189);
     frame.rotation.y = 3.279;
     frameGroup.add(frame);
-    // gui.add(frame.position, 'x', -1, 1).step(0.001);
-    // gui.add(frame.position, 'y', 0, 1).step(0.001);
-    // gui.add(frame.position, 'z', 0, 1).step(0.001);
-    // gui.add(frame.rotation, 'y', 0, 5).step(0.001);
 
 })
 
 let laptop;
 let tela;
-
-const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.1, 0.1,),
-    new THREE.MeshBasicMaterial({color: 'red'})
-)
 
 gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
     laptop = gltf.scene.children[0] ;
@@ -136,26 +139,66 @@ gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
 
     })
     laptop.scale.set(0.005, 0.005, 0.005)
-    // laptop.scale.set(0.01, 0.01, 0.001)
     laptop.position.y = 0.12;
     laptop.rotation.z = - Math.PI / 2;
     laptop.rotation.y = 0.3;
     frameGroup.add(laptop)
 } )
 
+const glassTexture = textureLoader.load('/models/Astro/textures/Glass_normal.png');
+const bodyTexture = textureLoader.load('/models/Astro/textures/Mat_0_normal.png');
+
+gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
+    gltf.scene.scale.set(0.002, 0.002, 0.002)
+    gltf.scene.traverse((item) => {
+        console.log(item.name);
+        item.material = new THREE.MeshStandardMaterial({
+            metalness: 0.8,
+            roughness: 0.5,
+            envMap,
+            envMapIntensity: 100
+        })
+        if (item.name === 'Skull_Bone_0' || item.name === 'Skull') {
+            // item.geometry.dispose();
+            // item.material.material();
+            item.material = new THREE.ShaderMaterial({
+                transparent: true,
+                vertexShader: `
+                void main () {
+                    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+                }
+                `,
+                fragmentShader: `
+                    void main () {
+                        gl_FragColor = vec4(0.,0.,0.,0.);
+                    }
+                `
+            })
+        }
+        
+    })
+
+
+    mainGroup.add(gltf.scene)
+    gltf.scene.rotation.order = 'YXZ'
+
+    gui.add(gltf.scene.position, 'x', -1, 1);
+    gui.add(gltf.scene.position, 'y', -1, 1);
+    gui.add(gltf.scene.position, 'z', -1, 1);
+
+    gui.add(gltf.scene.rotation, 'x', -3, 3);
+    gui.add(gltf.scene.rotation, 'y', -3, 3);
+    gui.add(gltf.scene.rotation, 'z', -3, 3);
+
+    gltf.scene.position.set(-0.254, -0.156, 0);
+    gltf.scene.rotation.set(-0.762, 1.524, -0.024);
+})
+
 
 
 const paperSheet = new THREE.Mesh(
     new THREE.PlaneGeometry(0.08, 0.13),
     new THREE.MeshStandardMaterial({ map: paperTexture, side: THREE.DoubleSide }),
-    // new THREE.ShaderMaterial({
-    //     vertexShader: vertexPaper,
-    //     fragmentShader:  fragmentPaper,
-    //     uniforms: {
-    //         time: {value: 0},
-    //     }
-
-    // })
 )
 
 
@@ -177,22 +220,10 @@ mainGroup.add(paperSheet)
 const ambientLight = new THREE.AmbientLight(0xffffff, 2)
 scene.add(ambientLight)
 
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6)
-// directionalLight.castShadow = true
-// directionalLight.shadow.mapSize.set(1024, 1024)
-// directionalLight.shadow.camera.far = 15
-// directionalLight.shadow.camera.left = - 7
-// directionalLight.shadow.camera.top = 7
-// directionalLight.shadow.camera.right = 7
-// directionalLight.shadow.camera.bottom = - 7
-// directionalLight.position.set(-10, 4.8, -4.6)
-// scene.add(directionalLight)
-
-
-const bulbLight = new THREE.SpotLight(0xFFFFFF, 20);
+const bulbLight = new THREE.SpotLight(0xFFEE00, 4);
 bulbLight.position.set(0.041, 0.213, 0.189);
 bulbLight.target.position.set(0, 0.115, 0.189);
-bulbLight.angle = 0.413;
+bulbLight.angle = 10;
 bulbLight.penumbra = 0.167;
 bulbLight.distance = 1;
 
@@ -235,16 +266,6 @@ frameGroup.add(test)
 
 mainGroup.add(frameGroup)
 
-
-// gui.add(targetView.rotation, 'x', -2, 5).step(0.001);
-// gui.add(targetView.rotation, 'y', 0, 5).step(0.001);
-// gui.add(targetView.rotation, 'z', 0, 5).step(0.001);
-
-// gui.add(targetView.position, 'x', -0.3, 0.3).step(0.00000001);
-// gui.add(targetView.position, 'y', -0.3, 0.3).step(0.00000001);
-// gui.add(targetView.position, 'z', -0.3, 0.3).step(0.00000001);
-
-
 gui.add(mainGroup.rotation, 'y', 0, 10);
 
 
@@ -253,7 +274,6 @@ gui.add(mainGroup.rotation, 'y', 0, 10);
 const starsGeometry = new THREE.BufferGeometry();
 
 const starsQuantity = 7000;
-const randomOffset = 0.2;
 
 const starsPositionArray = new Float32Array(starsQuantity * 3 * 3);
 
@@ -315,15 +335,10 @@ camera.position.set(-0.1056,0.1452,0.1968)
 mainGroup.add(camera)
 
 
-
-gui.add(camera.position, 'x', -.3, 0.3);
-gui.add(camera.position, 'y', -.3, 0.3);
-gui.add(camera.position, 'z', -.3, 0.3);
-
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-controls.enableZoom = false;
+// controls.enableZoom = false;
 
 /**
  * Renderer
@@ -336,6 +351,8 @@ renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+renderer.toneMapping  = THREE.CineonToneMapping;
+
 
 /**
  * Animate
@@ -423,12 +440,11 @@ camera2.position.z = 3;
 
 const colorPallet = [new THREE.Color(0, 0, 0), new THREE.Color(1,1,1)];
 
-for (let i = 2; i < 30; i+= 1) {
+for (let i = 2; i < 50; i+= 1) {
     colorPallet[i] = new THREE.Color(Math.random(), Math.random(), Math.random());
     
 }
 let actualColor = colorPallet[0];
-console.log(actualColor);
 let actualBg = colorPallet[1];
 
 const background = new THREE.Mesh(
@@ -466,7 +482,6 @@ scene2.add(background);
 
 
 canvas.addEventListener('click', () => {
-    console.log(actualColor, actualBg);
 
     if (actualPhase === 2) {
         changeColor();
@@ -505,7 +520,7 @@ const actualScene = () => {
             setTimeout(() => {
                 actualPhase = 2;
                 showBalls()
-            }, 18000);
+            }, 14000);
             const showBalls = () => {
                 timeline.to(background.material.uniforms.intensity, {
                     value: 0,
