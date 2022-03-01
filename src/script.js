@@ -16,6 +16,8 @@ import ReactDOM from 'react-dom';
 import {  FontLoader } from 'three/examples/jsm/loaders/FontLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
+ReactDOM.render(<App />, document.getElementById('root'));
+
 /**
  * Base
  */
@@ -134,8 +136,6 @@ gltfLoader.load('/models/Laptop/scene.gltf', (gltf) => {
         if (item.name === 'Screen') {
             tela = item;
             // tela.children.concat(screen)
-            console.log(tela.children);
-        gui.add(tela.rotation, 'x', -10, 10)
             tela.rotation.x = Math.PI * 3/2.05;
         }
 
@@ -183,15 +183,6 @@ gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
 
     mainGroup.add(gltf.scene)
     gltf.scene.rotation.order = 'YXZ'
-
-    gui.add(gltf.scene.position, 'x', -1, 1);
-    gui.add(gltf.scene.position, 'y', -1, 1);
-    gui.add(gltf.scene.position, 'z', -1, 1);
-
-    gui.add(gltf.scene.rotation, 'x', -3, 3);
-    gui.add(gltf.scene.rotation, 'y', -3, 3);
-    gui.add(gltf.scene.rotation, 'z', -3, 3);
-
     gltf.scene.position.set(-0.254, -0.156, 0);
     gltf.scene.rotation.set(-0.762, 1.524, -0.024);
 })
@@ -248,10 +239,6 @@ frameGroup.add(targetView)
 frameGroup.add(test)
 
 mainGroup.add(frameGroup)
-
-gui.add(mainGroup.rotation, 'y', 0, 10);
-
-
 //Particles
 
 const starsGeometry = new THREE.BufferGeometry();
@@ -380,11 +367,6 @@ window.addEventListener('wheel', (e) => {
     }
 })
 
-
-gui.add(camera.position, 'x', -2, 2).step(0.001);
-gui.add(camera.position, 'y', -2, 2).step(0.001);
-gui.add(camera.position, 'z', -2, 2).step(0.001);
-
 const openScreen = () => {
     if (tela) {
         if (tela.rotation.x > Math.PI * 0.8) {
@@ -393,7 +375,6 @@ const openScreen = () => {
         }
 }
 }
-
 
 const actualAnimation = (elapsedTime) => {
     switch (actualPhase){
@@ -648,4 +629,3 @@ const tick = () =>
 
 tick()
 
-ReactDOM.render(<App />, document.getElementById('root'));
