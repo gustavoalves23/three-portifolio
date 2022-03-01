@@ -295,7 +295,10 @@ window.addEventListener('resize', () =>
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
+    // camera2.left = -1 * sizes.width / sizes.height;
+    // camera2.right = 1 * sizes.width / sizes.height;
     camera.updateProjectionMatrix()
+    // camera2.updateProjectionMatrix()
 
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
@@ -320,7 +323,7 @@ gui.add(camera.position, 'z', -.3, 0.3);
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-// controls.enableZoom = false;
+controls.enableZoom = false;
 
 /**
  * Renderer
@@ -366,47 +369,17 @@ const gravity = (elapsedTime) => {
     mainGroup.rotation.y = 2 * Math.cos(elapsedTime  * 2 / 10) / 10;
 }
 
+let readyToStart = true;
+
 window.addEventListener('wheel', (e) => {
-    actualPhase = 1;
-    console.log(e);
-    actualScene();
+    if (actualPhase == 0 && readyToStart) {
+        actualPhase = 1;
+        readyToStart = false;
+        actualScene();
+    }
 })
 
-const actualScene = () => {
-    switch (actualPhase) {
-        case 1:
-            camera.position.order = 'YXZ'
-            gsap.to(test.position, {
-                x: 0.11,
-                y:0.11,
-                z:0,
-                duration: 10
-            });
-            gsap.to(camera.position, {
-                duration: 7,
-                y: 0.6,
-                z: - 0.5,
-                x: -1,
-                ease: 'SlowMo.easeIn'
-            }).then(() => {
-                gsap.to(camera.position, {
-                    duration: 3,
-                    y: 0.25,
-                    z: 0,
-                    x: 0,
-                    ease: 'Power4.easeIn'
-                }).then(() => {
-                    gsap.to(camera, {
-                        fov: 10,
-                        duration:0.5
-                    })
-                })
-            })
-            break
-        default: 
-        break
-    }
-}
+
 
 gui.add(camera.position, 'x', -2, 2).step(0.001);
 gui.add(camera.position, 'y', -2, 2).step(0.001);
@@ -444,9 +417,19 @@ const scene2 = new THREE.Scene();
 
 const aspectRatio = sizes.width / sizes.height
 const camera2 = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 1, -1)
+// const camera2 = new THREE.PerspectiveCamera(100, aspectRatio, 0.1, 100)
 
-camera2.position.z = 2;
+camera2.position.z = 3;
 
+const colorPallet = [new THREE.Color(0, 0, 0), new THREE.Color(1,1,1)];
+
+for (let i = 2; i < 30; i+= 1) {
+    colorPallet[i] = new THREE.Color(Math.random(), Math.random(), Math.random());
+    
+}
+let actualColor = colorPallet[0];
+console.log(actualColor);
+let actualBg = colorPallet[1];
 
 const background = new THREE.Mesh(
     new THREE.PlaneGeometry(aspectRatio * 2, 2),
@@ -454,15 +437,86 @@ const background = new THREE.Mesh(
         vertexShader: vertexPaper,
         fragmentShader: fragmentPaper,
         uniforms:{
-            time: {value: 0}
+            u_time: {value: 0},
+            u_resolution: {value: new THREE.Vector2(sizes.width, sizes.height)},
+            intensity: {value: 1},
+            backgroundColor: {value: actualBg },
+            mainColor: {value: actualColor}
         }
     })
 )
-// background.rotation.x =  2;
 
-// camera2.lookAt(background)
+const changeColor = () => {
+    if (actualBg === colorPallet[colorPallet.length - 1]) {
+        actualColor = colorPallet[0];
+        actualBg = colorPallet[1];
+    } else {
+        let actualIndex;
+        colorPallet.forEach((color, index) => {if (actualColor === color) actualIndex = index;})
+        actualColor = colorPallet[actualIndex + 1];
+        actualBg = colorPallet[actualIndex + 2];
+    }
+    background.material.uniforms.backgroundColor.value = actualBg;
+    console.log(actualBg, actualColor);
+    background.material.uniforms.mainColor.value = actualColor;
+}
+
 scene2.add(background);
-scene2.add(camera2);
+
+
+
+canvas.addEventListener('click', () => {
+    console.log(actualColor, actualBg);
+
+    if (actualPhase === 2) {
+        changeColor();
+    }
+})
+
+const actualScene = () => {
+    switch (actualPhase) {
+        case 1:
+            camera.position.order = 'YXZ'
+            const timeline = gsap.timeline();
+            gsap.to(test.position, {
+                x: 0.11,
+                y:0.11,
+                z:0,
+                duration: 10
+            });
+            timeline.to(camera.position, {
+                duration: 10,
+                y: 0.6,
+                z: - 0.5,
+                x: -1,
+                ease: 'slowMo.easeIn'
+            });
+            timeline.to(camera.position, {
+                duration: 3,
+                y: 0.25,
+                z: 0,
+                x: 0,
+                ease: 'Power4.easeIn'
+            })
+            timeline.to(camera, {
+                fov: 10,
+                duration:0.5
+            })
+            setTimeout(() => {
+                actualPhase = 2;
+                showBalls()
+            }, 18000);
+            const showBalls = () => {
+                timeline.to(background.material.uniforms.intensity, {
+                    value: 0,
+                    duration: 10,
+                })
+            }
+            break
+        default: 
+        break
+    }
+}
 
 
 const tick = () =>
@@ -473,7 +527,6 @@ const tick = () =>
 
     if (laptop) {
         laptop.rotation.x = 4.8 + ( Math.sin((elapsedTime * 2) / 5)) / 12;
-        // laptop.rotation.z = (- Math.PI / 2) + Math.sin((elapsedTime) * 3);
     }
 
     // Update controls
@@ -481,8 +534,10 @@ const tick = () =>
 
     gravity(elapsedTime);
 
+
+
     targetView.material.uniforms.time.value = elapsedTime / 2;
-    background.material.uniforms.time.value = elapsedTime / 2;
+    background.material.uniforms.u_time.value = elapsedTime / 2;
 
     mainGroup.rotation.y = Math.PI * 0.5;
 
@@ -507,18 +562,19 @@ const tick = () =>
         } else {
             mouse.repetition = 0;
         }
-        if (mouse.repetition < 3) {
+        if (mouse.repetition < 5) {
             mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.5 * deltaTime;
             mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
         }
         mouse.previousX = mouse.x;
         mouse.previousY = mouse.y;
     }
-    renderer.render(scene, camera)
+
+    renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
 
     
     // Call tick again on the next frame
-    // camera.updateProjectionMatrix()
+    camera.updateProjectionMatrix()
 
     window.requestAnimationFrame(tick)
 }

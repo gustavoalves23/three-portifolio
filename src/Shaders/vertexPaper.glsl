@@ -78,8 +78,6 @@ void main () {
   vUv = uv;
   vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-  modelPosition.y = cnoise(vec3(vec2(modelPosition.x, modelPosition.y), time));
-
   vec4 viewPosition = viewMatrix * modelPosition;
   vec4 projectedPosition = projectionMatrix * viewPosition;
   gl_Position = projectedPosition;
