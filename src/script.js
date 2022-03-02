@@ -495,6 +495,7 @@ canvas.addEventListener('click', () => {
 let canEnterScreen = false;
 
 const enterScreen =  () => {
+    controls.enabled = false;
     const timeline2 = gsap.timeline();
     const distance = camera.position.distanceTo(new THREE.Vector3(-1, 0.6, -0.5));
     if (distance > 0.8) {
