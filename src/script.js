@@ -145,6 +145,23 @@ gltfLoader.load('/models/frame/frame.gltf', (gltf) => {
 
 })
 
+let cadeira;
+
+gltfLoader.load('/models/Cad/cadeira.glb', (gltf) => {
+    cadeira = gltf.scene;
+    cadeira.scale.set(0.005, 0.005, 0.005);
+    cadeira.position.set(-0.507, -0.262, 0);
+    cadeira.rotation.set(0.427, -1.638, -0.114);
+    cadeira.rotation.order = 'YXZ'
+    cadeira.traverse((item) => {
+        if (item.isMesh) {
+            item.material = tableMaterial;
+        }
+    })
+    mainGroup.add(cadeira);
+
+})
+
 let laptop;
 let tela;
 
@@ -328,6 +345,8 @@ mainGroup.add(camera)
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 controls.enableZoom = false;
+controls.enableRotate = false;
+// controls.enabled = false;
 
 /**
  * Renderer
@@ -366,9 +385,6 @@ window.addEventListener('mousemove', (e) => {
     mouse.y = - (e.clientY / sizes.height) + 0.5
 })
 
-let canOpenScreen = false;
-
-
 
 const gravity = (elapsedTime) => {
     mainGroup.rotation.x = Math.sin(elapsedTime / 5) / 10;
@@ -381,13 +397,16 @@ const gravity = (elapsedTime) => {
 
 
 window.addEventListener('wheel', (e) => {
-    if (actualPhase == 0 && readyToStart && e.deltaY > 0) {
+    if (e.deltaY > 0) {
+            if (actualPhase == 0 && readyToStart ) {
         actualPhase = 1;
         readyToStart = false;
         actualScene();
     } else if (canEnterScreen) {
         enterScreen();
     }
+    }
+
 })
 
 const openScreen = () => {
@@ -481,6 +500,16 @@ let canEnterScreen = false;
 
 const enterScreen =  () => {
     const timeline2 = gsap.timeline();
+    const distance = camera.position.distanceTo(new THREE.Vector3(-1, 0.6, -0.5));
+    if (distance > 0.8) {
+        timeline2.to(camera.position, {
+            duration: distance,
+            y: 0.6,
+            z: - 0.5,
+            x: -1,
+            ease: 'slowMo.easeIn'
+        })
+    }
 timeline2.to(camera.position, {
     duration: 3,
     y: 0.25,
@@ -532,7 +561,10 @@ const actualScene = () => {
                 z: - 0.5,
                 x: -1,
                 ease: 'slowMo.easeIn'
-            }).then(() => canEnterScreen = true);
+            }).then(() => {
+                canEnterScreen = true;
+                controls.enableRotate = true;
+            });
         default: 
         break
     }
@@ -647,7 +679,6 @@ const tick = () =>
     }
 
     renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
-
     
     // Call tick again on the next frame
     camera.updateProjectionMatrix()
