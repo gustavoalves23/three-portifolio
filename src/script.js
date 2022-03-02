@@ -1,7 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import * as dat from 'lil-gui'
+// import * as dat from 'lil-gui'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 import fragmentPicture from './Shaders/fragmentPicture.glsl';
 import vertexPicture from './Shaders/vertexPicture.glsl';
@@ -16,8 +16,6 @@ import ReactDOM from 'react-dom';
 import {  FontLoader } from 'three/examples/jsm/loaders/FontLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
-ReactDOM.render(<App />, document.getElementById('root'));
-
 let actualPhase = 0;
 let readyToStart = false;
 
@@ -26,15 +24,13 @@ let readyToStart = false;
  * Base
  */
 // Debug
-const gui = new dat.GUI()
-gui.close()
+
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 //Textures
 
-const nextStep = 0;
 
 const loadManager = new THREE.LoadingManager(() => {
     gsap.to('.loading', {
@@ -85,7 +81,7 @@ let table;
 const tableMaterial = new THREE.MeshStandardMaterial({
     color: 'black',
     envMap,
-    envMapIntensity: 10,
+    envMapIntensity: 20,
     metalness: 0.8,
     roughness: 0.2
 
@@ -380,7 +376,7 @@ const mouse = {
     previousY: 0
 }
 
-window.addEventListener('mousemove', (e) => {
+canvas.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / sizes.width)  - 0.5,
     mouse.y = - (e.clientY / sizes.height) + 0.5
 })
@@ -507,7 +503,7 @@ const enterScreen =  () => {
             y: 0.6,
             z: - 0.5,
             x: -1,
-            ease: 'slowMo.easeIn'
+            ease: 'power4.easeIn'
         })
     }
 timeline2.to(camera.position, {
@@ -564,11 +560,15 @@ const actualScene = () => {
             }).then(() => {
                 canEnterScreen = true;
                 controls.enableRotate = true;
+                // ReactDOM.render(<App />, document.getElementById('root'));
             });
         default: 
         break
     }
 }
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
 
 const fontLoader = new FontLoader(loadManager);
 
@@ -597,12 +597,6 @@ fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
 
     fonte.position.set(-0.131, 0.213, -0.155);
     fonte.rotation.set(0.23, -0.409, 0.181);
-    gui.add(fonte.position, 'x', -1, 1).step(0.001);
-    gui.add(fonte.position, 'y', -1, 1).step(0.001);
-    gui.add(fonte.position, 'z', -1, 1).step(0.001);
-    gui.add(fonte.rotation, 'x', -2, 2).step(0.001);
-    gui.add(fonte.rotation, 'y', -2, 2).step(0.001);
-    gui.add(fonte.rotation, 'z', -2, 2).step(0.001);
 
     mainGroup.add(mesh)
 })
@@ -623,6 +617,8 @@ paperSheet.position.y = 0.103;
 paperSheet.position.z = 0.2;
 paperSheet.position.x = -0.03;
 mainGroup.add(paperSheet)
+mainGroup.rotation.y = Math.PI * 0.5;
+
 
 
 const tick = () =>
@@ -646,7 +642,6 @@ const tick = () =>
     background.material.uniforms.u_time.value = elapsedTime / 2;
 
 
-    mainGroup.rotation.y = Math.PI * 0.5;
 
 
     actualAnimation(elapsedTime);
@@ -659,8 +654,8 @@ const tick = () =>
 
         //Parallax
 
-        const ParallaxX = mouse.x * 0.5;
-        const ParallaxY = mouse.y * 0.5;
+        const ParallaxX = mouse.x * 0.3;
+        const ParallaxY = mouse.y * 0.3;
 
 
     
@@ -670,7 +665,7 @@ const tick = () =>
         } else {
             mouse.repetition = 0;
         }
-        if (mouse.repetition < 5) {
+        if (mouse.repetition < 2) {
             mainGroup.position.x += (ParallaxX - mainGroup.position.x) * 0.5 * deltaTime;
             mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
         }
