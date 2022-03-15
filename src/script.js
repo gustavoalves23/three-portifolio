@@ -19,6 +19,8 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 let actualPhase = 0;
 let readyToStart = false;
 
+ReactDOM.render(<App />, document.getElementById('root'));
+
 
 /**
  * Base
@@ -552,6 +554,12 @@ const actualScene = () => {
                 z:0,
                 duration: 10
             });
+            gsap.to(fonte.scale, {
+                x: 0,
+                y: 0,
+                z: 0,
+                duration: 5
+            })
             gsap.to(camera.position, {
                 duration: 10,
                 y: 0.6,
@@ -567,8 +575,6 @@ const actualScene = () => {
         break
     }
 }
-
-ReactDOM.render(<App />, document.getElementById('root'));
 
 
 const fontLoader = new FontLoader(loadManager);
@@ -660,7 +666,7 @@ const tick = () =>
 
 
     
-    if (actualPhase === 0 || canEnterScreen) {
+    if ((actualPhase === 0 || canEnterScreen)) {
         if (mouse.y === mouse.previousY && mouse.x === mouse.previousX) {
             mouse.repetition += deltaTime;
         } else {
@@ -673,6 +679,10 @@ const tick = () =>
         mouse.previousX = mouse.x;
         mouse.previousY = mouse.y;
     }
+
+    console.log(mouse.x, mouse.y);
+
+    console.log(frameGroup.position);
 
     renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
     
