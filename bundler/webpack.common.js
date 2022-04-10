@@ -60,7 +60,7 @@ module.exports = {
 
             // Images
             {
-                test: /\.(jpg|png|gif|svg)$/,
+                test: /\.(jpg|png|gif|svg|jpeg)$/,
                 type: 'asset/resource',
                 generator:
                 {
@@ -92,5 +92,8 @@ module.exports = {
                 }
             }
         ]
-    }
+    },
+    resolve: {
+        extensions: ['', '.js', '.jsx'],
+      }
 }

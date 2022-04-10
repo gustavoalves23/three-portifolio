@@ -1,11 +1,11 @@
 import React from "react";
+import About from "./Components/About";
 
 export default class App extends React.Component{
   render() {
     return(
       <div className="app">
-          <h1 style={{color: 'green', textAlign: 'center', fontSize: 500}}>Teste</h1>
-          <button>Teste</button>
+        <About />
       </div>
     )
   }

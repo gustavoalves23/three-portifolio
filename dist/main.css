@@ -1,0 +1,153 @@
+@import url(https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Poppins:wght@100&display=swap);
+*
+{
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+html,
+body
+{
+    overflow: hidden;
+    background-color: #1D84B5;
+    width: 100vw;
+    height: 100vh;
+}
+
+.app {
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    max-width: 1500px;
+    margin: auto;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none;
+}
+
+.app > button {
+    padding: 30px 100px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.webgl
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+    z-index: 1;
+}
+
+.loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    /* default z-index = 10 */
+    z-index: 10;
+    background-color: rgb(0, 0, 0);
+    color: white;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading  h1 {
+    font-size: 100px;
+}
+
+.name {
+    color: #0A2239;
+    font-size: 5rem;
+}
+
+.job {
+    color: #0A2239;
+    font-size: 2rem;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.photo {
+    width: 400px;
+    border-radius: 30px;
+    margin: auto;
+}
+
+.about-me {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    justify-content: space-evenly;
+    text-align: center;
+}
+
+.social{ 
+    display: flex;
+    justify-content: space-evenly;
+    padding: 20px;
+}
+
+.social > a {
+    text-decoration: none;
+    color: #0A2239;
+    font-size: 2rem;
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    margin: 0 10px;
+}
+
+.social > a:hover {
+    background-color: wheat;
+}
+
+.tel {
+    text-align: center;
+}
+
+.about-page {
+    margin: 20px 0;
+    width: 600px;
+    font-size: 1.5rem;
+}
+
+#tip{ 
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 20;
+    background-color: white;
+    padding: 2%;
+    margin: 20px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    opacity: 0;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none;
+}
+
+.disabled {
+    display: none;
+}
+
+/*# sourceMappingURL=main.css.map*/

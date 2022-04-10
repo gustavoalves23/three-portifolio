@@ -1,7 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-// import * as dat from 'lil-gui'
+import * as dat from 'lil-gui'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 import fragmentPicture from './Shaders/fragmentPicture.glsl';
 import vertexPicture from './Shaders/vertexPicture.glsl';
@@ -21,6 +21,7 @@ let readyToStart = false;
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
+const tipDiv = document.getElementById('tip');
 
 /**
  * Base
@@ -42,6 +43,11 @@ const loadManager = new THREE.LoadingManager(() => {
 }).then(() => {
     document.querySelector('.loading').remove();
     readyToStart = true;
+    tipDiv.classList.toggle('disabled');
+    gsap.to(tipDiv, {
+        opacity: 1,
+        duration: 2
+    })
 })
 
 });
@@ -60,7 +66,7 @@ const envMap = cubeTextureLoader.load(
 
 const textureLoader = new THREE.TextureLoader(loadManager)
 
-const personTexture = textureLoader.load('/Textures/person.jpeg', () => {
+const personTexture = textureLoader.load('/Textures/photo.png', () => {
     let stockPos = new THREE.Vector3()
     stockPos.copy(targetView.position)
     stockPos.z -= 0.07;
@@ -222,6 +228,13 @@ gltfLoader.load('/models/Astro/scene.gltf', (gltf) => {
 })
 
 
+gltfLoader.load('/models/Lamp/scene.gltf', (gltf) => {
+    gltf.scene.scale.set(.25, .25, .25);
+    gltf.scene.position.set(0.214, 0.238, 0.262);
+    gltf.scene.rotation.set(-0.116, -1.392, -0.656);
+    mainGroup.add(gltf.scene);
+})
+
 /**
  * Lights
  */
@@ -234,8 +247,6 @@ bulbLight.target.position.set(0, 0.115, 0.189);
 bulbLight.angle = 10;
 bulbLight.penumbra = 0.167;
 bulbLight.distance = 1;
-
-
 bulbLight.castShadow = true;
 bulbLight.shadow.mapSize.x = 1024;
 bulbLight.shadow.mapSize.y = 1024;
@@ -319,10 +330,9 @@ window.addEventListener('resize', () =>
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
-    // camera2.left = -1 * sizes.width / sizes.height;
-    // camera2.right = 1 * sizes.width / sizes.height;
+    camera2.aspect = sizes.width / sizes.height
     camera.updateProjectionMatrix()
-    // camera2.updateProjectionMatrix()
+    camera2.updateProjectionMatrix()
 
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
@@ -341,10 +351,9 @@ mainGroup.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
+controls.enableDamping = true;
 controls.enableZoom = false;
 controls.enableRotate = false;
-// controls.enabled = false;
 
 /**
  * Renderer
@@ -353,7 +362,8 @@ const renderer = new THREE.WebGL1Renderer({
     canvas: canvas,
     antialias: true,
     alpha: true
-})
+});
+
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
@@ -393,19 +403,26 @@ const gravity = (elapsedTime) => {
     }
 }
 
+const wheelFunc =  (e) => {
 
-window.addEventListener('wheel', (e) => {
     if (e.deltaY > 0) {
             if (actualPhase == 0 && readyToStart ) {
         actualPhase = 1;
         readyToStart = false;
+        gsap.to(tipDiv, {duration: 0.5, opacity: 0}).then(() => {
+        tipDiv.classList.toggle('disabled')
+        tipDiv.innerText = 'Arraste para mover a câmera e use o scroll para avançar'
+        })
         actualScene();
     } else if (canEnterScreen) {
         enterScreen();
     }
     }
 
-})
+}
+
+
+window.addEventListener('wheel', wheelFunc)
 
 const openScreen = () => {
     if (tela) {
@@ -438,7 +455,6 @@ const scene2 = new THREE.Scene();
 
 const aspectRatio = sizes.width / sizes.height
 const camera2 = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 1, -1)
-// const camera2 = new THREE.PerspectiveCamera(100, aspectRatio, 0.1, 100)
 
 camera2.position.z = 3;
 
@@ -485,11 +501,12 @@ scene2.add(background);
 
 let rendering = true;
 
-
-
 canvas.addEventListener('click', () => {
 
     if (actualPhase === 2) {
+        gsap.to(tipDiv, {duration: 0.5, opacity: 0}).then(() => {
+            tipDiv.classList.toggle('disabled')
+        })
         changeColor();
     }
 })
@@ -498,9 +515,15 @@ let canEnterScreen = false;
 
 const enterScreen =  () => {
     controls.enabled = false;
+    window.removeEventListener('wheel', wheelFunc);
+    gsap.to(tipDiv, {duration: 0.5, opacity: 0}).then(() => {
+        tipDiv.classList.toggle('disabled');
+        tipDiv.innerText = 'Clique para alterar as cores 😄 '
+
+    })
     const timeline2 = gsap.timeline();
     const distance = camera.position.distanceTo(new THREE.Vector3(-1, 0.6, -0.5));
-    if (distance > 0.8) {
+    if (distance > 0.4) {
         timeline2.to(camera.position, {
             duration: distance,
             y: 0.6,
@@ -521,6 +544,8 @@ timeline2.to(camera, {
     duration:0.5
 }).then(() => {
     actualPhase = 2;
+    tipDiv.classList.toggle('disabled');
+    gsap.to(tipDiv, {duration: 0.5, opacity: 1})
     const timelime3 = gsap.timeline()
     timelime3.to(background.material.uniforms.intensity, {
         delay: 2,
@@ -540,6 +565,9 @@ timeline2.to(camera, {
     }).then(() => {
         rendering = false;
         canvas.remove();
+        gsap.to(tipDiv, {duration: 0.5, opacity: 0}).then(() => {
+            tipDiv.classList.add('disabled');
+        })
     })
 })
 }
@@ -569,13 +597,14 @@ const actualScene = () => {
             }).then(() => {
                 canEnterScreen = true;
                 controls.enableRotate = true;
-                // ReactDOM.render(<App />, document.getElementById('root'));
+                controls.enableZoom = false;
+                tipDiv.classList.toggle('disabled')
+                gsap.to(tipDiv, {duration: 1, opacity: 1})
             });
         default: 
         break
     }
 }
-
 
 const fontLoader = new FontLoader(loadManager);
 
@@ -599,13 +628,27 @@ fontLoader.load('/Fonts/Alfa Slab One_Regular.json', (font) => {
         height: 0.01
     })
 
+    const text2Geometry = new TextGeometry('FULLSTACK WEB DEVELOPER',{
+        font,
+        size: 0.045,
+        height: 0.01
+    })
+
     const mesh = new THREE.Mesh(textGeometry, textMaterial);
     fonte = mesh;
+
+    const mesh2 = new THREE.Mesh(text2Geometry, textMaterial);
+
+
+
+    mesh2.position.set(-0.392, 0.524, -0.8);
+    mesh2.rotation.set(-0.036, -1.816, 0.116);
 
     fonte.position.set(-0.131, 0.213, -0.155);
     fonte.rotation.set(0.23, -0.409, 0.181);
 
     mainGroup.add(mesh)
+    mainGroup.add(mesh2)
 })
 
 const paperSheet = new THREE.Mesh(
@@ -677,12 +720,8 @@ const tick = () =>
             mainGroup.position.y += (ParallaxY - mainGroup.position.y) * 0.5 * deltaTime;
         }
         mouse.previousX = mouse.x;
-        mouse.previousY = mouse.y;
+        // mouse.previousY = mouse.y;
     }
-
-    console.log(mouse.x, mouse.y);
-
-    console.log(frameGroup.position);
 
     renderer.render(actualPhase === 2 ? scene2 : scene, actualPhase === 2 ? camera2 : camera)
     
